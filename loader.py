@@ -3,6 +3,7 @@ from urllib.request import Request, urlopen
 import xml.etree.ElementTree as ET
 import logging
 import multiprocessing
+import threading
 from sys import exit
 
 
@@ -234,17 +235,17 @@ class XMLParser:
 
 if __name__ == '__main__':
     parser = XMLParser()
-    parser.db.drop_tables()
+    # parser.db.drop_tables()
     parser.db.create_tables()
     parser.db.change_to_utf()
     print("starting threads")
     color, palette, pattern = parser.get_last_row()
 
-    color_thread = multiprocessing.Process(name='Color', target=parser.write_to_color, args=(color + 1,))
+    color_thread = threading.Thread(name='Color', target=parser.write_to_color, args=(color + 1,))
     color_thread.start()
-    palette_thread = multiprocessing.Process(name='Palette', target=parser.write_to_palette, args=(palette + 1,))
+    palette_thread = threading.Thread(name='Palette', target=parser.write_to_palette, args=(palette + 1,))
     palette_thread.start()
-    pattern_thread = multiprocessing.Process(name='Pattern', target=parser.write_to_pattern, args=(pattern + 1,))
+    pattern_thread = threading.Thread(name='Pattern', target=parser.write_to_pattern, args=(pattern + 1,))
     pattern_thread.start()
 
     color_thread.join()
