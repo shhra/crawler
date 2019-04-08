@@ -234,8 +234,9 @@ class XMLParser:
 
 if __name__ == '__main__':
     parser = XMLParser()
-    # parser.db.drop_tables()
-    # parser.db.create_tables()
+    parser.db.drop_tables()
+    parser.db.create_tables()
+    parser.db.change_to_utf()
     print("starting threads")
     color, palette, pattern = parser.get_last_row()
 

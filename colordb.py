@@ -39,7 +39,7 @@ class ColorDB:
                       numViews INT,
                       numVotes INT,
                       numHearts INT,
-                      rank INT,
+                      colorRank INT,
                       dateCreated DATE
                       )
                     """
@@ -53,7 +53,7 @@ class ColorDB:
                       numViews INT,
                       numVotes INT,
                       numHearts INT,
-                      rank INT,
+                      patternRank INT,
                       dateCreated DATE,
                       color1 VARCHAR (255),
                       color2 VARCHAR (255),
@@ -75,7 +75,7 @@ class ColorDB:
                       numViews INT,
                       numVotes INT,
                       numHearts INT,
-                      rank INT,
+                      paletteRank INT,
                       dateCreated DATE,
                       color1 VARCHAR (255),
                       color2 VARCHAR (255),
@@ -98,7 +98,7 @@ class ColorDB:
         else:
             cur = conn.cursor()
         query = """
-        INSERT INTO colors (colorid, userName, hex, numViews, numVotes, numHearts, rank, dateCreated)
+        INSERT INTO colors (colorid, userName, hex, numViews, numVotes, numHearts, colorRank, dateCreated)
          VALUES (%s, %s, %s, %s, %s, %s, %s, %s) """
         cur.execute(query, value)
         if cur is None:
@@ -112,7 +112,7 @@ class ColorDB:
         else:
             cur = conn.cursor()
         query = """
-        INSERT INTO palettes (paletteId, username, numViews, numVotes, numHearts, rank, dateCreated,
+        INSERT INTO palettes (paletteId, username, numViews, numVotes, numHearts, paletteRank, dateCreated,
         color1, color2, color3, color4, color5,
         colorWidths1, colorWidths2, colorWidths3, colorWidths4, colorWidths5, numColors)
         VALUES (%s, %s, %s, %s, %s, %s, %s,
@@ -131,7 +131,7 @@ class ColorDB:
         else:
             cur = conn.cursor()
         query = """
-        INSERT INTO patterns (patternId, username, numViews, numVotes, numHearts, rank, dateCreated,
+        INSERT INTO patterns (patternId, username, numViews, numVotes, numHearts, patternRank, dateCreated,
         color1, color2, color3, color4, color5, imageUrl, templateNumber, numColors)
         VALUES (%s, %s, %s, %s, %s, %s, %s,
         %s, %s, %s, %s, %s, %s, %s, %s)
