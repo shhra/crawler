@@ -89,11 +89,11 @@ class XMLParser:
         return url, 2
 
     def write_to_color(self, start_iter):
-        print("Writing color")
+        # print("Writing color")
         cur = self.db.create_connection()
         for hex in range(start_iter, 16777216):
         # for hex in range(start_iter, 1000):
-            print('color @ {}'.format(str(hex)))
+        #     print('color @ {}'.format(str(hex)))
             try:
                 color_url = self.color_url('{0:06X}'.format(hex))
                 color = self.get_from_url(color_url, hex)
@@ -112,11 +112,11 @@ class XMLParser:
                 self.logger.exception("Color iterator stopped at: {}".format(str(hex)))
 
     def write_to_palette(self, start_iter):
-        print("writing palette")
+        # print("writing palette")
         cur = self.db.create_connection()
         for id in range(start_iter, 4638914):
         # for id in range(start_iter, 1000):
-            print("palette @ {}".format(str(id)))
+        #     print("palette @ {}".format(str(id)))
             try:
                 palette_url = self.palette_url(id)
                 palette = self.get_from_url(palette_url, id)
@@ -159,11 +159,11 @@ class XMLParser:
                 self.logger.exception("Palette iterator stopped at: {}".format(str(id)))
 
     def write_to_pattern(self, start_iter):
-        print("writing pattern")
+        # print("writing pattern")
         cur = self.db.create_connection()
         for id in range(start_iter, 5788439):
         # for id in range(start_iter, 1000):
-            print("pattern @ {}".format(str(id)))
+        #     print("pattern @ {}".format(str(id)))
             try:
                 pattern_url = self.pattern_url(id)
                 pattern = self.get_from_url(pattern_url, id)
@@ -238,7 +238,7 @@ if __name__ == '__main__':
     # parser.db.drop_tables()
     parser.db.create_tables()
     parser.db.change_to_utf()
-    print("starting threads")
+    # print("starting threads")
     color, palette, pattern = parser.get_last_row()
 
     color_thread = threading.Thread(name='Color', target=parser.write_to_color, args=(color + 1,))
@@ -252,7 +252,7 @@ if __name__ == '__main__':
     palette_thread.join()
     pattern_thread.join()
 
-    print("Completed")
+    # print("Completed")
 
     exit(0)
 
