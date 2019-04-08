@@ -1,9 +1,8 @@
-import pandas as pd
 from colordb import ColorDB
 from urllib.request import Request, urlopen
 import xml.etree.ElementTree as ET
 import logging
-from multiprocessing import Pool
+import multiprocessing
 from sys import exit
 
 
@@ -57,7 +56,7 @@ class XMLParser:
                     self.logger.error('No color at iteration:{}'.format(iter))
                 elif api_url[1] == 1:
                     self.logger.error('No palette at iteration:{}'.format(iter))
-                else:
+                elif api_url[1] == 2:
                     self.logger.error('No pattern at iteration:{}'.format(iter))
                 return None
             root = tree.getroot()
@@ -89,11 +88,11 @@ class XMLParser:
         return url, 2
 
     def write_to_color(self, start_iter):
-        if start_iter == 0:
-            self.db.drop_colors()
-            self.db.create_tables()
-        # for hex in range(start_iter, 16777216):
-        for hex in range(start_iter, 1000):
+        print("Writing color")
+        cur = self.db.create_connection()
+        for hex in range(start_iter, 16777216):
+        # for hex in range(start_iter, 1000):
+            print('color @ {}'.format(str(hex)))
             try:
                 color_url = self.color_url('{0:06X}'.format(hex))
                 color = self.get_from_url(color_url, hex)
@@ -104,17 +103,19 @@ class XMLParser:
                       color['hex'],
                       color['numViews'],
                       color['numVotes'],
-                      color['numHearts'])
-                self.db.insert_color(values)
+                      color['numHearts'],
+                      color['rank'],
+                      color['dateCreated'])
+                self.db.insert_color(values, cur)
             except:
-                self.logger.error("Color iterator stopped at: {}".format(str(hex)))
+                self.logger.exception("Color iterator stopped at: {}".format(str(hex)))
 
     def write_to_palette(self, start_iter):
-        if start_iter == 0:
-            self.db.drop_palettes()
-            self.db.create_tables()
-        # for id in range(start_iter, 4638914):
-        for id in range(start_iter, 1000):
+        print("writing palette")
+        cur = self.db.create_connection()
+        for id in range(start_iter, 4638914):
+        # for id in range(start_iter, 1000):
+            print("palette @ {}".format(str(id)))
             try:
                 palette_url = self.palette_url(id)
                 palette = self.get_from_url(palette_url, id)
@@ -126,8 +127,8 @@ class XMLParser:
                 else:
                     colorWidths = ['NULL' for _ in range(len(pcolor))]
 
+                curlen = len(pcolor)
                 if len(pcolor) != 5:
-                    curlen = len(pcolor)
                     value = 5 - len(pcolor)
                     for _ in range(value):
                         pcolor.append('NULL')
@@ -138,6 +139,8 @@ class XMLParser:
                           palette['numViews'],
                           palette['numVotes'],
                           palette['numHearts'],
+                          palette['rank'],
+                          palette['dateCreated'],
                           pcolor[0],
                           pcolor[1],
                           pcolor[2],
@@ -147,26 +150,32 @@ class XMLParser:
                           colorWidths[1],  # 'NULL',  #
                           colorWidths[2],  # 'NULL',  #
                           colorWidths[3],  # 'NULL',  #
-                          colorWidths[4]   # 'NULL',  #
+                          colorWidths[4],
+                          curlen  # 'NULL',  #
                           )
-                self.db.insert_palette(values)
+                self.db.insert_palette(values, cur)
             except:
-                self.logger.info("Palette iterator stopped at: {}".format(str(id)))
+                self.logger.exception("Palette iterator stopped at: {}".format(str(id)))
 
     def write_to_pattern(self, start_iter):
-        if start_iter == 0:
-            self.db.drop_patterns()
-            self.db.create_tables()
-        # for id in range(start_iter, 5788439):
-        for id in range(start_iter, 1000):
+        print("writing pattern")
+        cur = self.db.create_connection()
+        for id in range(start_iter, 5788439):
+        # for id in range(start_iter, 1000):
+            print("pattern @ {}".format(str(id)))
             try:
-                pattern_url = self.palette_url(id)
+                pattern_url = self.pattern_url(id)
                 pattern = self.get_from_url(pattern_url, id)
                 if pattern is None:
                     continue
+
+                imageurl = pattern['imageUrl'].split('/')
+                imageurl[2] = 'static.colourlovers.com'
+                finalurl = '/'.join(imageurl)
+
                 pcolor = pattern['colors']
+                curlen = len(pcolor)
                 if len(pcolor) != 5:
-                    curlen = len(pcolor)
                     value = 5 - len(pcolor)
                     for _ in range(value):
                         pcolor.append('NULL')
@@ -179,27 +188,71 @@ class XMLParser:
                           pattern['numViews'],
                           pattern['numVotes'],
                           pattern['numHearts'],
+                          pattern['rank'],
+                          pattern['dateCreated'],
                           pcolor[0],
                           pcolor[1],
                           pcolor[2],
                           pcolor[3],
                           pcolor[4],
-                          pattern['imageUrl'],
-                          template_number)
-                self.db.insert_pattern(values)
+                          finalurl,
+                          template_number,
+                          curlen)
+                self.db.insert_pattern(values, cur)
             except:
-                self.logger.info("Pattern iterator stopped at: {}".format(str(id)))
+                self.logger.exception("Pattern iterator stopped at: {}".format(str(id)))
+
+    def get_last_row(self):
+        cur = self.db.conn.cursor()
+
+        sql = """SELECT hex FROM colors ORDER BY ID DESC LIMIT 1"""
+        cur.execute(sql)
+        out = cur.fetchall()
+        if len(out) != 0:
+            last_color = int(out[0][0], 16)
+        else:
+            last_color = -1
+
+        sql = """SELECT patternId FROM patterns ORDER BY ID DESC LIMIT 1"""
+        cur.execute(sql)
+        out = cur.fetchall()
+        if len(out) != 0:
+            last_pattern = out[0][0]
+        else:
+            last_pattern = -1
+
+        sql = """SELECT paletteId FROM palettes ORDER BY ID DESC LIMIT 1"""
+        cur.execute(sql)
+        out = cur.fetchall()
+        if len(out) != 0:
+            last_palette = out[0][0]
+        else:
+            last_palette = -1
+
+        return last_color, last_palette, last_pattern
 
 
 if __name__ == '__main__':
-    pool = Pool(processes=4)
     parser = XMLParser()
-    # evaluate "f(20)" asynchronously
-    pool.apply_async(parser.write_to_color, range(0))  # runs in *only* one process
-    pool.apply_async(parser.write_to_palette, range(0))
-    pool.apply_async(parser.write_to_pattern, range(0))
+    # parser.db.drop_tables()
+    # parser.db.create_tables()
+    print("starting threads")
+    color, palette, pattern = parser.get_last_row()
 
-    print("Execution complete")
+    color_thread = multiprocessing.Process(name='Color', target=parser.write_to_color, args=(color + 1,))
+    color_thread.start()
+    palette_thread = multiprocessing.Process(name='Palette', target=parser.write_to_palette, args=(palette + 1,))
+    palette_thread.start()
+    pattern_thread = multiprocessing.Process(name='Pattern', target=parser.write_to_pattern, args=(pattern + 1,))
+    pattern_thread.start()
+
+    color_thread.join()
+    palette_thread.join()
+    pattern_thread.join()
+
+    print("Completed")
+
+    exit(0)
 
 
 # EXTREMELY IMPORTANT

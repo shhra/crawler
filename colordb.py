@@ -33,12 +33,14 @@ class ColorDB:
         color_table = """
                       CREATE TABLE IF NOT EXISTS colors ( 
                       id INT AUTO_INCREMENT PRIMARY KEY,
-                      colorid INT,
+                      colorId INT,
                       userName VARCHAR (255),
                       hex VARCHAR (255),
                       numViews INT,
                       numVotes INT,
-                      numHearts INT
+                      numHearts INT,
+                      rank INT,
+                      dateCreated DATE
                       )
                     """
         cur.execute(color_table)
@@ -51,11 +53,14 @@ class ColorDB:
                       numViews INT,
                       numVotes INT,
                       numHearts INT,
+                      rank INT,
+                      dateCreated DATE,
                       color1 VARCHAR (255),
                       color2 VARCHAR (255),
                       color3 VARCHAR (255),
                       color4 VARCHAR (255),
                       color5 VARCHAR (255),
+                      numColors INT,
                       imageUrl VARCHAR (255),
                       templateNumber INT (255)
                       )
@@ -70,6 +75,8 @@ class ColorDB:
                       numViews INT,
                       numVotes INT,
                       numHearts INT,
+                      rank INT,
+                      dateCreated DATE,
                       color1 VARCHAR (255),
                       color2 VARCHAR (255),
                       color3 VARCHAR (255),
@@ -79,53 +86,81 @@ class ColorDB:
                       colorWidths2 VARCHAR (255),
                       colorWidths3 VARCHAR (255),
                       colorWidths4 VARCHAR (255),
-                      colorWidths5 VARCHAR (255)
+                      colorWidths5 VARCHAR (255),
+                      numColors INT
                       )
         """
         cur.execute(palette_table)
 
-    def insert_color(self, value):
-        cur = self.conn.cursor()
+    def insert_color(self, value, conn=None):
+        if conn is None:
+            cur = self.conn.cursor()
+        else:
+            cur = conn.cursor()
         query = """
-        INSERT INTO colors (colorid, userName, hex, numViews, numVotes, numHearts)
-         VALUES (%s, %s, %s, %s, %s, %s) """
+        INSERT INTO colors (colorid, userName, hex, numViews, numVotes, numHearts, rank, dateCreated)
+         VALUES (%s, %s, %s, %s, %s, %s, %s, %s) """
         cur.execute(query, value)
-        self.conn.commit()
+        if cur is None:
+            self.conn.commit()
+        else:
+            conn.commit()
 
-    def insert_palette(self, value):
-        cur = self.conn.cursor()
+    def insert_palette(self, value, conn=None):
+        if conn is None:
+            cur = self.conn.cursor()
+        else:
+            cur = conn.cursor()
         query = """
-        INSERT INTO palettes (paletteId, username, numViews, numVotes, numHearts, 
+        INSERT INTO palettes (paletteId, username, numViews, numVotes, numHearts, rank, dateCreated,
         color1, color2, color3, color4, color5,
-        colorWidths1, colorWidths2, colorWidths3, colorWidths4, colorWidths5)
-        VALUES (%s, %s, %s, %s, %s,
+        colorWidths1, colorWidths2, colorWidths3, colorWidths4, colorWidths5, numColors)
+        VALUES (%s, %s, %s, %s, %s, %s, %s,
                 %s, %s, %s, %s, %s,
-                %s, %s, %s, %s, %s)
+                %s, %s, %s, %s, %s, %s)
         """
         cur.execute(query, value)
-        self.conn.commit()
+        if cur is None:
+            self.conn.commit()
+        else:
+            conn.commit()
 
-    def insert_pattern(self, value):
-        cur = self.conn.cursor()
+    def insert_pattern(self, value, conn=None):
+        if conn is None:
+            cur = self.conn.cursor()
+        else:
+            cur = conn.cursor()
         query = """
-        INSERT INTO patterns (patternId, username, numViews, numVotes, numHearts,
-        color1, color2, color3, color4, color5, imageUrl, templateNumber)
-        VALUES (%s, %s, %s, %s, %s, 
-        %s, %s, %s, %s, %s, %s, %s)
+        INSERT INTO patterns (patternId, username, numViews, numVotes, numHearts, rank, dateCreated,
+        color1, color2, color3, color4, color5, imageUrl, templateNumber, numColors)
+        VALUES (%s, %s, %s, %s, %s, %s, %s,
+        %s, %s, %s, %s, %s, %s, %s, %s)
         """
         cur.execute(query, value)
-        self.conn.commit()
+        if cur is None:
+            self.conn.commit()
+        else:
+            conn.commit()
 
-    def drop_colors(self):
-        cur = self.conn.cursor()
+    def drop_colors(self, conn=None):
+        if conn is None:
+            cur = self.conn.cursor()
+        else:
+            cur = conn.cursor()
         cur.execute("DROP TABLE colors")
 
-    def drop_palettes(self):
-        cur = self.conn.cursor()
+    def drop_palettes(self, conn=None):
+        if conn is None:
+            cur = self.conn.cursor()
+        else:
+            cur = conn.cursor()
         cur.execute("DROP TABLE palettes")
 
-    def drop_patterns(self):
-        cur = self.conn.cursor()
+    def drop_patterns(self, conn=None):
+        if conn is None:
+            cur = self.conn.cursor()
+        else:
+            cur = conn.cursor()
         cur.execute("DROP TABLE patterns")
 
     def drop_tables(self):
