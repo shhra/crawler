@@ -5,6 +5,7 @@ import xml.etree.ElementTree as ET
 import logging
 from threading import Thread
 from sys import exit
+import argparse
 
 
 class ThreadWithReturn(Thread):
@@ -24,7 +25,12 @@ class ThreadWithReturn(Thread):
 
 class XMLParser:
 
-    def __init__(self):
+    def __init__(self, st, cstart, pstart, ptstart, end):
+        self.st = st
+        self.cst = cstart
+        self.pst = pstart
+        self.ptst = ptstart
+        self.end = end
         self.logger = logging.getLogger(__name__)
         self.init_logger()
         self.headers = {'User-Agent': 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36\
@@ -35,7 +41,7 @@ class XMLParser:
 
     def init_logger(self):
         self.logger.setLevel(logging.DEBUG)
-        logging.basicConfig(filename='error.log')
+        logging.basicConfig(filename='error_{}.log'.format(self.st))
         formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
         ch = logging.StreamHandler()
         ch.setLevel(logging.DEBUG)
@@ -64,7 +70,7 @@ class XMLParser:
 
     def get_from_url(self, api_url, iter):
         req = Request(url=api_url[0], headers=self.headers)
-        with urlopen(req) as url:
+        with urlopen(req, timeout=2) as url:
             try:
                 tree = ET.parse(url)
             except ET.ParseError:
@@ -103,11 +109,11 @@ class XMLParser:
         url = 'http://www.colourlovers.com/api/pattern/{}'.format(str(id))
         return url, 2
 
-    def write_to_color(self, start_iter):
+    def write_to_color(self):
         cur = self.db.create_connection()
-        for hex in range(start_iter, 16777216):
+        for hex in range(self.cst, self.end):
         # for hex in range(start_iter, 1000):
-            if hex % 100 == 0:
+            if hex % 1 == 0:
                 self.logger.info('color @ {}'.format(str(hex)))
             try:
                 color_url = self.color_url('{0:06X}'.format(hex))
@@ -128,13 +134,13 @@ class XMLParser:
                 return 404
             except:
                 self.logger.exception("Color iterator stopped at: {}".format(str(hex)))
+        return 0
 
-    def write_to_palette(self, start_iter):
+    def write_to_palette(self):
         # print("writing palette")
         cur = self.db.create_connection()
-        for id in range(start_iter, 4638914):
-         # for id in range(start_iter, 1000):
-            if id % 100 == 0:
+        for id in range(self.pst, self.end):
+            if id % 1 == 0:
                 self.logger.info("palette @ {}".format(str(id)))
             try:
                 palette_url = self.palette_url(id)
@@ -179,13 +185,13 @@ class XMLParser:
                 return 404
             except:
                 self.logger.exception("Palette iterator stopped at: {}".format(str(id)))
+        return 0
 
-    def write_to_pattern(self, start_iter):
+    def write_to_pattern(self):
         # print("writing pattern")
         cur = self.db.create_connection()
-        for id in range(start_iter, 5788439):
-        # for id in range(start_iter, 1000):
-            if id % 100 == 0:
+        for id in range(self.ptst, self.end):
+            if id % 1 == 0:
                 self.logger.info("pattern @ {}".format(str(id)))
             try:
                 pattern_url = self.pattern_url(id)
@@ -229,11 +235,17 @@ class XMLParser:
                 return 404
             except:
                 self.logger.exception("Pattern iterator stopped at: {}".format(str(id)))
+        return 0
 
-    def get_last_row(self):
-        cur = self.db.conn.cursor()
 
-        sql = """SELECT hex FROM colors ORDER BY ID DESC LIMIT 1"""
+def get_last_row(st, end):
+    try:
+        db = ColorDB()
+        db.create_tables()
+        db.change_to_utf()
+        cur = db.conn.cursor()
+
+        sql = "SELECT hex FROM colors WHERE hex BETWEEN '%06X' and '%06X' ORDER BY ID DESC LIMIT 1" % (st, end+1)
         cur.execute(sql)
         out = cur.fetchall()
         if len(out) != 0:
@@ -241,7 +253,7 @@ class XMLParser:
         else:
             last_color = -1
 
-        sql = """SELECT patternId FROM patterns ORDER BY ID DESC LIMIT 1"""
+        sql = """SELECT patternId FROM patterns WHERE patternId BETWEEN {} and {} ORDER BY ID DESC LIMIT 1""".format(st, end+1)
         cur.execute(sql)
         out = cur.fetchall()
         if len(out) != 0:
@@ -249,7 +261,7 @@ class XMLParser:
         else:
             last_pattern = -1
 
-        sql = """SELECT paletteId FROM palettes ORDER BY ID DESC LIMIT 1"""
+        sql = """SELECT paletteId FROM palettes WHERE paletteID BETWEEN {} and {} ORDER BY ID DESC LIMIT 1""".format(st, end+1)
         cur.execute(sql)
         out = cur.fetchall()
         if len(out) != 0:
@@ -258,36 +270,64 @@ class XMLParser:
             last_palette = -1
 
         return last_color, last_palette, last_pattern
+    except:
+        logging.exception("error in range")
+        return None
 
 
 if __name__ == '__main__':
-    parser = XMLParser()
+    import time
+    start = time.time()
+
+    aparser = argparse.ArgumentParser(description='Define ranger of parser')
+    aparser.add_argument('--start', metavar='-S', type=int, default=0, help='Start iterator')
+    aparser.add_argument('--end', metavar='-E', type=int, default=10, help='End iterator')
+    args = aparser.parse_args()
+    last = get_last_row(args.start, args.end)
+    color, palette, pattern = last
+    if last[0] == -1:
+        color = args.start
+    if last[1] == -1:
+        palette = args.start
+    if last[2] == -1:
+        pattern = args.start
+
+
+    parser = XMLParser(args.start, color+1, palette+1, pattern+1, args.end)
     # parser.db.drop_tables()
-    parser.db.create_tables()
-    parser.db.change_to_utf()
+    # parser.db.create_tables()
+    # parser.db.change_to_utf()
     # print("starting threads")
-    color, palette, pattern = parser.get_last_row()
 
     out = out2 = out3 = 0
-    color_thread = ThreadWithReturn(name='Color', target=parser.write_to_color, args=(color + 1,))
-    palette_thread = ThreadWithReturn(name='Palette', target=parser.write_to_palette, args=(palette + 1,))
-    pattern_thread = ThreadWithReturn(name='Pattern', target=parser.write_to_pattern, args=(pattern + 1,))
+    color_thread = ThreadWithReturn(name='Color', target=parser.write_to_color)
+    palette_thread = ThreadWithReturn(name='Palette', target=parser.write_to_palette)
+    pattern_thread = ThreadWithReturn(name='Pattern', target=parser.write_to_pattern)
 
     color_thread.start()
     palette_thread.start()
     pattern_thread.start()
+
     out = color_thread.join()
-    if out != 0:
-        # print("From color: ", out)
-        exit(-1073741819)
     out2 = palette_thread.join()
-    if out2 != 0:
-        # print("From pattern: ", out)
-        exit(-1073741819)
     out3 = palette_thread.join()
-    if out3 != 0:
-        # print("From palette: ", out2)
+    print(time.time() - start)
+
+    parser.logger.info("{} {} {}".format(out, out2, out3))
+    if out == out2 == out3 == 0:
+        exit(0)
+    else:
         exit(-1073741819)
+
+    # if out != 0:
+    #     # print("From color: ", out)
+    #     exit(-1073741819)
+    # if out2 != 0:
+    #     # print("From pattern: ", out)
+    #     exit(-1073741819)
+    # if out3 != 0:
+    #     # print("From palette: ", out2)
+    #     exit(-1073741819)
     # print(out, out2, out3)
 
     # print("Completed")
