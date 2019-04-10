@@ -15,7 +15,7 @@ class ColorDB:
             passwd="color",
             database="colorbase"
         )
-        print("Connection established successfully.")
+        # print("Connection established successfully.")
         return mydb
 
     @staticmethod

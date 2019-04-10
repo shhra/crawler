@@ -104,12 +104,11 @@ class XMLParser:
         return url, 2
 
     def write_to_color(self, start_iter):
-        # print("Writing color")
         cur = self.db.create_connection()
         for hex in range(start_iter, 16777216):
         # for hex in range(start_iter, 1000):
             if hex % 100 == 0:
-                print('color @ {}'.format(str(hex)))
+                self.logger.info('color @ {}'.format(str(hex)))
             try:
                 color_url = self.color_url('{0:06X}'.format(hex))
                 color = self.get_from_url(color_url, hex)
@@ -125,7 +124,7 @@ class XMLParser:
                       color['dateCreated'])
                 self.db.insert_color(values, cur)
             except URLError:
-                print("Re-establishing connection")
+                # print("Re-establishing connection")
                 return 404
             except:
                 self.logger.exception("Color iterator stopped at: {}".format(str(hex)))
@@ -136,7 +135,7 @@ class XMLParser:
         for id in range(start_iter, 4638914):
          # for id in range(start_iter, 1000):
             if id % 100 == 0:
-                print("palette @ {}".format(str(id)))
+                self.logger.info("palette @ {}".format(str(id)))
             try:
                 palette_url = self.palette_url(id)
                 palette = self.get_from_url(palette_url, id)
@@ -176,7 +175,7 @@ class XMLParser:
                           )
                 self.db.insert_palette(values, cur)
             except URLError:
-                print("Re-establishing connection")
+                # print("Re-establishing connection")
                 return 404
             except:
                 self.logger.exception("Palette iterator stopped at: {}".format(str(id)))
@@ -187,7 +186,7 @@ class XMLParser:
         for id in range(start_iter, 5788439):
         # for id in range(start_iter, 1000):
             if id % 100 == 0:
-                print("pattern @ {}".format(str(id)))
+                self.logger.info("pattern @ {}".format(str(id)))
             try:
                 pattern_url = self.pattern_url(id)
                 pattern = self.get_from_url(pattern_url, id)
@@ -226,7 +225,7 @@ class XMLParser:
                 self.db.insert_pattern(values, cur)
             except URLError:
                 # wait for connection re-establishment
-                print("Re-establishing connection")
+                # print("Re-establishing connection")
                 return 404
             except:
                 self.logger.exception("Pattern iterator stopped at: {}".format(str(id)))
@@ -279,17 +278,17 @@ if __name__ == '__main__':
     pattern_thread.start()
     out = color_thread.join()
     if out != 0:
-        print("From color: ", out)
+        # print("From color: ", out)
         exit(-1073741819)
     out2 = palette_thread.join()
     if out2 != 0:
-        print("From pattern: ", out)
+        # print("From pattern: ", out)
         exit(-1073741819)
     out3 = palette_thread.join()
     if out3 != 0:
-        print("From palette: ", out2)
+        # print("From palette: ", out2)
         exit(-1073741819)
-    print(out, out2, out3)
+    # print(out, out2, out3)
 
     # print("Completed")
 
