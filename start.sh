@@ -9,6 +9,6 @@ for start in {0..19}
 do
     let st=$((3000000 + $(($start * 100000)) ))
     let end=$(( 3000000 + $(( $(($start + 1)) * 100000)) ))
-#    code "$st" "$end" &
-    echo $st, $end
+    code "$st" "$end" &
+#    echo $st, $end
 done
