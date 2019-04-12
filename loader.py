@@ -41,7 +41,7 @@ class XMLParser:
 
     def init_logger(self):
         self.logger.setLevel(logging.DEBUG)
-        logging.basicConfig(filename='error_{}.log'.format(self.st))
+        logging.basicConfig(filename='./logs/error_{}.log'.format(self.st))
         formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
         ch = logging.StreamHandler()
         ch.setLevel(logging.DEBUG)
@@ -113,7 +113,7 @@ class XMLParser:
         cur = self.db.create_connection()
         for hex in range(self.cst, self.end):
         # for hex in range(start_iter, 1000):
-            if hex % 1 == 0:
+            if hex % 1000 == 0:
                 self.logger.info('color @ {}'.format(str(hex)))
             try:
                 color_url = self.color_url('{0:06X}'.format(hex))
