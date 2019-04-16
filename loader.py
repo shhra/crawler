@@ -140,7 +140,7 @@ class XMLParser:
         # print("writing palette")
         cur = self.db.create_connection()
         for id in range(self.pst, self.end):
-            if id % 1 == 0:
+            if id % 1000 == 0:
                 self.logger.info("palette @ {}".format(str(id)))
             try:
                 palette_url = self.palette_url(id)
@@ -191,7 +191,7 @@ class XMLParser:
         # print("writing pattern")
         cur = self.db.create_connection()
         for id in range(self.ptst, self.end):
-            if id % 1 == 0:
+            if id % 1000 == 0:
                 self.logger.info("pattern @ {}".format(str(id)))
             try:
                 pattern_url = self.pattern_url(id)
@@ -301,19 +301,20 @@ if __name__ == '__main__':
 
     out = out2 = out3 = 0
     color_thread = ThreadWithReturn(name='Color', target=parser.write_to_color)
-    palette_thread = ThreadWithReturn(name='Palette', target=parser.write_to_palette)
-    pattern_thread = ThreadWithReturn(name='Pattern', target=parser.write_to_pattern)
+    # palette_thread = ThreadWithReturn(name='Palette', target=parser.write_to_palette)
+    # pattern_thread = ThreadWithReturn(name='Pattern', target=parser.write_to_pattern)
 
     color_thread.start()
-    palette_thread.start()
-    pattern_thread.start()
+    # palette_thread.start()
+    # pattern_thread.start()
 
     out = color_thread.join()
-    out2 = palette_thread.join()
-    out3 = palette_thread.join()
+    # out2 = palette_thread.join()
+    # out3 = palette_thread.join()
     print(time.time() - start)
 
-    parser.logger.info("{} {} {}".format(out, out2, out3))
+    # parser.logger.info("{} {} {}".format(out, out2, out3))
+    parser.logger.info("{} {} {}".format(out))
     if out == out2 == out3 == 0:
         exit(0)
     else:
