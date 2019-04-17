@@ -292,7 +292,6 @@ if __name__ == '__main__':
     if last[2] == -1:
         pattern = args.start
 
-
     parser = XMLParser(args.start, color+1, palette+1, pattern+1, args.end)
     # parser.db.drop_tables()
     # parser.db.create_tables()
@@ -311,10 +310,9 @@ if __name__ == '__main__':
     out = color_thread.join()
     # out2 = palette_thread.join()
     # out3 = palette_thread.join()
-    print(time.time() - start)
 
     # parser.logger.info("{} {} {}".format(out, out2, out3))
-    parser.logger.info("{} {} {}".format(out))
+    # parser.logger.info("{} {} {}".format(out))
     if out == out2 == out3 == 0:
         exit(0)
     else:
