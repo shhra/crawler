@@ -249,25 +249,25 @@ class XMLParser:
 
     def update_pattern_and_fetch_image(self):
         cur = self.db.create_connection()
-        cursor = cur.cursor()
-        sql = """SELECT patternId FROM patterns WHERE patternId BETWEEN %s and %s"""
-        value = (self.ptst, self.end)
-        cursor.execute(sql, value)
-        ids = cursor.fetchall()
-        for x in ids:
-            id = x[0]
+        for id in range(self.ptst, self.end):
             # if id % 1000 == 0:
             if id % 1000 == 0:
                 self.logger.info("pattern @ {}".format(str(id)))
-            pattern_url = self.pattern_url(id)
-            pattern = self.get_from_url(pattern_url, id)
             try:
-                template_number = pattern['template'][1].split('/')[-2]
-            except KeyError:
-                template_number = -1
-            values = (template_number,
-                          id)
-            self.db.update_patterns(values, cur)
+                pattern_url = self.pattern_url(id)
+                pattern = self.get_from_url(pattern_url, id)
+                if pattern is None:
+                    continue
+                try:
+                    template_number = pattern['template'][1].split('/')[-2]
+                except KeyError:
+                    template_number = -1
+                values = (template_number, pattern['id'])
+                self.db.update_patterns(values, cur)
+            except URLError:
+                return 404
+            except:
+                self.logger.exception("Pattern iterator stopped at: {}".format(str(id)))
         return 0
 
     def fetch_images(self):
