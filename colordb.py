@@ -179,7 +179,7 @@ class ColorDB:
             cur = self.conn.cursor()
         else:
             cur = conn.cursor()
-        query = """UPDATE patterns SET templateNumber= %s WHERE patternId = %s"""
+        query = """UPDATE patterns SET templateNumber = %s WHERE patternId = %s"""
         cur.execute(query, value)
         if conn is None:
             self.conn.commit()

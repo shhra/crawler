@@ -249,38 +249,32 @@ class XMLParser:
 
     def update_pattern_and_fetch_image(self):
         cur = self.db.create_connection()
-        for id in range(self.ptst, self.end):
+        cursor = cur.cursor()
+        sql = """SELECT patternId FROM patterns WHERE patternId BETWEEN %s and %s"""
+        value = (self.ptst, self.end)
+        cursor.execute(sql, value)
+        ids = cursor.fetchall()
+        for x in ids:
+            id = x[0]
             # if id % 1000 == 0:
             if id % 1000 == 0:
                 self.logger.info("pattern @ {}".format(str(id)))
+            pattern_url = self.pattern_url(id)
+            pattern = self.get_from_url(pattern_url, id)
             try:
-                pattern_url = self.pattern_url(id)
-                pattern = self.get_from_url(pattern_url, id)
-                if pattern is None:
-                    continue
-                # self.logger.info("Template URL: {}".format(pattern['template'][1]))
-                try:
-                    template_number = pattern['template'][1].split('/')[-2]
-                    values = (int(template_number),
-                              pattern['id'])
-                    self.db.update_patterns(values, cur)
-                except KeyError:
-                    continue
-                    # self.logger.info("The template number is: {}".format(template_number))
-            except URLError:
-                return 404
-            except:
-                self.logger.exception("Pattern iterator stopped at: {}".format(str(id)))
-        cur.close()
+                template_number = pattern['template'][1].split('/')[-2]
+            except KeyError:
+                template_number = -1
+            values = (template_number,
+                          id)
+            self.db.update_patterns(values, cur)
         return 0
 
     def fetch_images(self):
         for i in range(self.ptst, self.end):
             try:
                 filename = str(i)+'.png'
-                response = requests.get(self.template_url(i)[0], stream=True)
-                img = Image.open(BytesIO(response.content)).convert('RGB')
-                img.save('./templates/'+filename)
+                # image = url
             except URLError:
                 continue
         return 0
@@ -328,13 +322,13 @@ if __name__ == '__main__':
     if not os.path.exists(path):
         os.mkdir(path)
     aparser = argparse.ArgumentParser(description='Define ranger of parser')
-    aparser.add_argument('--start', metavar='-S', type=int, default=1000, help='Start iterator')
-    aparser.add_argument('--end', metavar='-E', type=int, default=1110, help='End iterator')
+    aparser.add_argument('--start', metavar='-S', type=int, default=1, help='Start iterator')
+    aparser.add_argument('--end', metavar='-E', type=int, default=500, help='End iterator')
     args = aparser.parse_args()
 
     color = palette = 0
 
-    d = 10000
+    d = 100000
     parser = XMLParser(args.start, color+1, palette+1, args.start, args.start + d)
     parser1 = XMLParser(args.start + d, color+1, palette+1, args.start + d, args.start + 2*d)
     parser2 = XMLParser(args.start + 2*d, color+1, palette+1, args.start + 2 * d, args.end)
@@ -342,25 +336,25 @@ if __name__ == '__main__':
     parser4 = XMLParser(args.start + 4*d, color+1, palette+1, args.start + 5 * d, args.end)
 
     print(args.start, args.start+d, args.start+2*d, args.start+3*d, args.start+4*d, args.end)
-    template_thread_1 = ThreadWithReturn(name='Pattern_1', target=parser.fetch_images)
-    template_thread_2 = ThreadWithReturn(name='Pattern_2', target=parser1.fetch_images)
-    template_thread_3 = ThreadWithReturn(name='Pattern_3', target=parser2.fetch_images)
-    template_thread_4 = ThreadWithReturn(name='Pattern_3', target=parser3.fetch_images)
-    template_thread_5 = ThreadWithReturn(name='Pattern_3', target=parser4.fetch_images)
+    pattern_thread_1 = ThreadWithReturn(name='Pattern_1', target=parser.update_pattern_and_fetch_image)
+    pattern_thread_2 = ThreadWithReturn(name='Pattern_2', target=parser1.update_pattern_and_fetch_image)
+    pattern_thread_3 = ThreadWithReturn(name='Pattern_3', target=parser2.update_pattern_and_fetch_image)
+    pattern_thread_4 = ThreadWithReturn(name='Pattern_3', target=parser3.update_pattern_and_fetch_image)
+    pattern_thread_5 = ThreadWithReturn(name='Pattern_3', target=parser4.update_pattern_and_fetch_image)
 
     print(" Starting thread at {}".format(args.start))
 
-    template_thread_1.start()
-    template_thread_2.start()
-    template_thread_3.start()
-    template_thread_4.start()
-    template_thread_5.start()
+    pattern_thread_1.start()
+    pattern_thread_2.start()
+    pattern_thread_3.start()
+    pattern_thread_4.start()
+    pattern_thread_5.start()
 
-    out = template_thread_1.join()
-    out2 = template_thread_2.join()
-    out3 = template_thread_3.join()
-    out4 = template_thread_4.join()
-    out5 = template_thread_5.join()
+    out  = pattern_thread_1.join()
+    out2 = pattern_thread_2.join()
+    out3 = pattern_thread_3.join()
+    out4 = pattern_thread_4.join()
+    out5 = pattern_thread_5.join()
 
     if out == out2 == out3 == out4 == out5 == 0:
         print("Successful")
