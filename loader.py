@@ -259,18 +259,21 @@ class XMLParser:
                 if pattern is None:
                     continue
                 # self.logger.info("Template URL: {}".format(pattern['template'][1]))
-                template_number = pattern['template'][1].split('/')[-2]
-                    # self.logger.info("The template number is: {}".format(template_number))
-                values = (int(template_number),
-                          pattern['id'])
-                self.db.update_patterns(values, cur)
-                filename = str(template_number)+'.jpg'
                 try:
-                    response = requests.get(self.template_url(template_number)[0])
-                    img = Image.open(BytesIO(response.content)).convert('RGB')
-                    img.save('./templates/'+filename)
-                except URLError:
-                    self.logger.exception("Template doesn't exists")
+                    template_number = pattern['template'][1].split('/')[-2]
+                    values = (int(template_number),
+                              pattern['id'])
+                    self.db.update_patterns(values, cur)
+                    filename = str(template_number)+'.jpg'
+                    try:
+                        response = requests.get(self.template_url(template_number)[0])
+                        img = Image.open(BytesIO(response.content)).convert('RGB')
+                        img.save('./templates/'+filename)
+                    except URLError:
+                        self.logger.exception("Template doesn't exists")
+                except KeyError:
+                    continue
+                    # self.logger.info("The template number is: {}".format(template_number))
             except URLError:
                 return 404
             except:
