@@ -264,13 +264,6 @@ class XMLParser:
                     values = (int(template_number),
                               pattern['id'])
                     self.db.update_patterns(values, cur)
-                    filename = str(template_number)+'.jpg'
-                    try:
-                        response = requests.get(self.template_url(template_number)[0])
-                        img = Image.open(BytesIO(response.content)).convert('RGB')
-                        img.save('./templates/'+filename)
-                    except URLError:
-                        self.logger.exception("Template doesn't exists")
                 except KeyError:
                     continue
                     # self.logger.info("The template number is: {}".format(template_number))
@@ -285,7 +278,7 @@ class XMLParser:
         for i in range(self.ptst, self.end):
             try:
                 filename = str(i)+'.png'
-                response = requests.get(self.template_url(i)[0])
+                response = requests.get(self.template_url(i)[0], stream=True)
                 img = Image.open(BytesIO(response.content)).convert('RGB')
                 img.save('./templates/'+filename)
             except URLError:
@@ -342,36 +335,32 @@ if __name__ == '__main__':
     color = palette = 0
 
     d = 10000
-    # d = 10
-    # if last[2] == -1:
     parser = XMLParser(args.start, color+1, palette+1, args.start, args.start + d)
-    # if last[2] == -1:
     parser1 = XMLParser(args.start + d, color+1, palette+1, args.start + d, args.start + 2*d)
-    # if last[2] == -1:
     parser2 = XMLParser(args.start + 2*d, color+1, palette+1, args.start + 2 * d, args.end)
     parser3 = XMLParser(args.start + 3*d, color+1, palette+1, args.start + 4 * d, args.end)
     parser4 = XMLParser(args.start + 4*d, color+1, palette+1, args.start + 5 * d, args.end)
 
     print(args.start, args.start+d, args.start+2*d, args.start+3*d, args.start+4*d, args.end)
-    pattern_thread_1 = ThreadWithReturn(name='Pattern_1', target=parser.fetch_images)
-    pattern_thread_2 = ThreadWithReturn(name='Pattern_2', target=parser1.fetch_images)
-    pattern_thread_3 = ThreadWithReturn(name='Pattern_3', target=parser2.fetch_images)
-    pattern_thread_4 = ThreadWithReturn(name='Pattern_3', target=parser3.fetch_images)
-    pattern_thread_5 = ThreadWithReturn(name='Pattern_3', target=parser4.fetch_images)
+    template_thread_1 = ThreadWithReturn(name='Pattern_1', target=parser.fetch_images)
+    template_thread_2 = ThreadWithReturn(name='Pattern_2', target=parser1.fetch_images)
+    template_thread_3 = ThreadWithReturn(name='Pattern_3', target=parser2.fetch_images)
+    template_thread_4 = ThreadWithReturn(name='Pattern_3', target=parser3.fetch_images)
+    template_thread_5 = ThreadWithReturn(name='Pattern_3', target=parser4.fetch_images)
 
     print(" Starting thread at {}".format(args.start))
 
-    pattern_thread_1.start()
-    pattern_thread_2.start()
-    pattern_thread_3.start()
-    pattern_thread_4.start()
-    pattern_thread_5.start()
+    template_thread_1.start()
+    template_thread_2.start()
+    template_thread_3.start()
+    template_thread_4.start()
+    template_thread_5.start()
 
-    out = pattern_thread_1.join()
-    out2 = pattern_thread_2.join()
-    out3 = pattern_thread_3.join()
-    out4 = pattern_thread_4.join()
-    out5 = pattern_thread_5.join()
+    out = template_thread_1.join()
+    out2 = template_thread_2.join()
+    out3 = template_thread_3.join()
+    out4 = template_thread_4.join()
+    out5 = template_thread_5.join()
 
     if out == out2 == out3 == out4 == out5 == 0:
         print("Successful")
