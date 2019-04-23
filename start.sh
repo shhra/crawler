@@ -5,10 +5,10 @@ code()
         sleep 1;
     done
 }
-for start in {0..14}
+for start in {0..10}
 do
-    let st=$(($start * 300000))
-    let end=$(( $(($start + 1)) * 300000))
+    let st=$(($start * 50000))
+    let end=$(( $(($start + 1)) * 50000))
     code "$st" "$end" &
 #    echo $st, $end
 done
