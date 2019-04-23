@@ -285,7 +285,7 @@ class XMLParser:
         for i in range(self.ptst, self.end):
             try:
                 filename = str(i)+'.png'
-                response = requests.get(self.template_url(i))
+                response = requests.get(self.template_url(i)[0])
                 img = Image.open(BytesIO(response.content)).convert('RGB')
                 img.save('./templates/'+filename)
             except URLError:
@@ -342,6 +342,7 @@ if __name__ == '__main__':
     color = palette = 0
 
     d = 10000
+    # d = 10
     # if last[2] == -1:
     parser = XMLParser(args.start, color+1, palette+1, args.start, args.start + d)
     # if last[2] == -1:
