@@ -6,6 +6,10 @@ import logging
 from threading import Thread
 from sys import exit
 import argparse
+import os
+from PIL import Image
+import requests
+from io import BytesIO
 
 
 class ThreadWithReturn(Thread):
@@ -86,10 +90,11 @@ class XMLParser:
                 first_child = root.find("./")
                 item_dict = {}
                 for child in first_child:
-                    if child.tag != 'colors':
-                        item_dict[child.tag] = child.text
-                    else:
-                        item_dict[child.tag] = [item.text for item in child]
+                    item_dict[child.tag] = child.text
+                    if child.tag == 'colors':
+                        item_dict['colors'] = [item.text for item in child]
+                    if child.tag == 'template':
+                        item_dict['template'] = [item.text for item in child]
             except TypeError:
                 return None
             return item_dict
@@ -108,6 +113,11 @@ class XMLParser:
     def pattern_url(id):
         url = 'http://www.colourlovers.com/api/pattern/{}'.format(str(id))
         return url, 2
+
+    @staticmethod
+    def template_url(id):
+        url = 'http://www.colourlovers.com/patternPreview/{}/CCCCCC/999999/666666/333333/000000.png'.format(str(id))
+        return url, 3
 
     def write_to_color(self):
         cur = self.db.create_connection()
@@ -210,7 +220,7 @@ class XMLParser:
                     for _ in range(value):
                         pcolor.append('NULL')
                 try:
-                    template_number = pattern['url'].split('/')[-2]
+                    template_number = pattern['template']['url'].split('/')[-2]
                 except KeyError:
                     template_number = -1
                 values = (pattern['id'],
@@ -237,6 +247,37 @@ class XMLParser:
                 self.logger.exception("Pattern iterator stopped at: {}".format(str(id)))
         return 0
 
+    def update_pattern_and_fetch_image(self):
+        cur = self.db.create_connection()
+        for id in range(self.ptst, self.end):
+            # if id % 1000 == 0:
+            if id % 1000 == 0:
+                self.logger.info("pattern @ {}".format(str(id)))
+            try:
+                pattern_url = self.pattern_url(id)
+                pattern = self.get_from_url(pattern_url, id)
+                if pattern is None:
+                    continue
+                # self.logger.info("Template URL: {}".format(pattern['template'][1]))
+                template_number = pattern['template'][1].split('/')[-2]
+                    # self.logger.info("The template number is: {}".format(template_number))
+                values = (int(template_number),
+                          pattern['id'])
+                self.db.update_patterns(values, cur)
+                filename = str(template_number)+'.jpg'
+                try:
+                    response = requests.get(self.template_url(template_number)[0])
+                    img = Image.open(BytesIO(response.content)).convert('RGB')
+                    img.save('./templates/'+filename)
+                except URLError:
+                    self.logger.exception("Template doesn't exists")
+            except URLError:
+                return 404
+            except:
+                self.logger.exception("Pattern iterator stopped at: {}".format(str(id)))
+        cur.close()
+        return 0
+
 
 def get_last_row(st, end):
     try:
@@ -253,7 +294,7 @@ def get_last_row(st, end):
         else:
             last_color = -1
 
-        sql = """SELECT patternId FROM patterns WHERE patternId BETWEEN {} and {} ORDER BY ID DESC LIMIT 1""".format(st, end+1)
+        sql = """SELECT patternId FROM patterns WHERE patternId BETWEEN {} and {} ORDER BY ID ASC LIMIT 1""".format(st, end)
         cur.execute(sql)
         out = cur.fetchall()
         if len(out) != 0:
@@ -261,7 +302,7 @@ def get_last_row(st, end):
         else:
             last_pattern = -1
 
-        sql = """SELECT paletteId FROM palettes WHERE paletteID BETWEEN {} and {} ORDER BY ID DESC LIMIT 1""".format(st, end+1)
+        sql = """SELECT paletteId FROM palettes WHERE paletteID BETWEEN {} and {} ORDER BY ID DESC LIMIT 1""".format(st,end+1)
         cur.execute(sql)
         out = cur.fetchall()
         if len(out) != 0:
@@ -276,47 +317,87 @@ def get_last_row(st, end):
 
 
 if __name__ == '__main__':
-    import time
-    start = time.time()
-
+    path = './templates'
+    if not os.path.exists(path):
+        os.mkdir(path)
     aparser = argparse.ArgumentParser(description='Define ranger of parser')
-    aparser.add_argument('--start', metavar='-S', type=int, default=0, help='Start iterator')
-    aparser.add_argument('--end', metavar='-E', type=int, default=10, help='End iterator')
+    aparser.add_argument('--start', metavar='-S', type=int, default=1000, help='Start iterator')
+    aparser.add_argument('--end', metavar='-E', type=int, default=1110, help='End iterator')
     args = aparser.parse_args()
-    last = get_last_row(args.start, args.end)
-    color, palette, pattern = last
-    if last[0] == -1:
-        color = args.start
-    if last[1] == -1:
-        palette = args.start
-    if last[2] == -1:
-        pattern = args.start
 
-    parser = XMLParser(args.start, color+1, palette+1, pattern+1, args.end)
-    # parser.db.drop_tables()
-    # parser.db.create_tables()
-    # parser.db.change_to_utf()
-    # print("starting threads")
+    color = palette = 0
 
-    out = out2 = out3 = 0
-    color_thread = ThreadWithReturn(name='Color', target=parser.write_to_color)
-    # palette_thread = ThreadWithReturn(name='Palette', target=parser.write_to_palette)
-    # pattern_thread = ThreadWithReturn(name='Pattern', target=parser.write_to_pattern)
+    d = 100_000
+    # if last[2] == -1:
+    parser = XMLParser(args.start, color+1, palette+1, args.start, args.start + d)
+    # if last[2] == -1:
+    parser1 = XMLParser(args.start + d, color+1, palette+1, args.start + d, args.start + 2*d)
+    # if last[2] == -1:
+    parser2 = XMLParser(args.start + 2*d, color+1, palette+1, args.start + 2 * d, args.end)
 
-    color_thread.start()
-    # palette_thread.start()
-    # pattern_thread.start()
+    print(args.start, args.start + d, args.start + 2 * d, args.end)
+    pattern_thread_1 = ThreadWithReturn(name='Pattern_1', target=parser.update_pattern_and_fetch_image)
+    pattern_thread_2 = ThreadWithReturn(name='Pattern_2', target=parser1.update_pattern_and_fetch_image)
+    pattern_thread_3 = ThreadWithReturn(name='Pattern_3', target=parser2.update_pattern_and_fetch_image)
 
-    out = color_thread.join()
-    # out2 = palette_thread.join()
-    # out3 = palette_thread.join()
+    print(" Starting thread at {}".format(args.start))
 
-    # parser.logger.info("{} {} {}".format(out, out2, out3))
-    # parser.logger.info("{} {} {}".format(out))
+    pattern_thread_1.start()
+    pattern_thread_2.start()
+    pattern_thread_3.start()
+
+    out = pattern_thread_1.join()
+    out2 = pattern_thread_2.join()
+    out3 = pattern_thread_3.join()
+
     if out == out2 == out3 == 0:
+        print("Successful")
         exit(0)
     else:
         exit(-1073741819)
+
+    # important loader code
+    # import time
+    # start = time.time()
+    #
+    # aparser = argparse.ArgumentParser(description='Define ranger of parser')
+    # aparser.add_argument('--start', metavar='-S', type=int, default=0, help='Start iterator')
+    # aparser.add_argument('--end', metavar='-E', type=int, default=10, help='End iterator')
+    # args = aparser.parse_args()
+    # last = get_last_row(args.start, args.end)
+    # color, palette, pattern = last
+    # if last[0] == -1:
+    #     color = args.start
+    # if last[1] == -1:
+    #     palette = args.start
+    # if last[2] == -1:
+    #     pattern = args.start
+    #
+    # parser = XMLParser(args.start, color+1, palette+1, pattern+1, args.end)
+    # # parser.db.drop_tables()
+    # # parser.db.create_tables()
+    # # parser.db.change_to_utf()
+    # # print("starting threads")
+    #
+    # out = out2 = out3 = 0
+    # color_thread = ThreadWithReturn(name='Color', target=parser.write_to_color)
+    # # palette_thread = ThreadWithReturn(name='Palette', target=parser.write_to_palette)
+    # # pattern_thread = ThreadWithReturn(name='Pattern', target=parser.write_to_pattern)
+    #
+    # color_thread.start()
+    # # palette_thread.start()
+    # # pattern_thread.start()
+    #
+    # out = color_thread.join()
+    # # out2 = palette_thread.join()
+    # # out3 = palette_thread.join()
+    #
+    # # parser.logger.info("{} {} {}".format(out, out2, out3))
+    # # parser.logger.info("{} {} {}".format(out))
+    # if out == out2 == out3 == 0:
+    #     exit(0)
+    # else:
+    #     exit(-1073741819)
 
     # if out != 0:
     #     # print("From color: ", out)

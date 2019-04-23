@@ -5,13 +5,10 @@ code()
         sleep 1;
     done
 }
-for number in {9..15}
+for start in {0..14}
 do
-for start in {0..9}
-do
-    let st=$((1000000 * number + $(($start * 100000)) ))
-    let end=$(( 1000000 * number + $(( $(($start + 1)) * 100000)) ))
+    let st=$(($start * 300000))
+    let end=$(( $(($start + 1)) * 300000))
     code "$st" "$end" &
 #    echo $st, $end
-done
 done

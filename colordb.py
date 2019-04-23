@@ -101,7 +101,7 @@ class ColorDB:
         INSERT INTO colors (colorid, userName, hex, numViews, numVotes, numHearts, colorRank, dateCreated)
          VALUES (%s, %s, %s, %s, %s, %s, %s, %s) """
         cur.execute(query, value)
-        if cur is None:
+        if conn is None:
             self.conn.commit()
         else:
             conn.commit()
@@ -120,7 +120,7 @@ class ColorDB:
                 %s, %s, %s, %s, %s, %s)
         """
         cur.execute(query, value)
-        if cur is None:
+        if conn is None:
             self.conn.commit()
         else:
             conn.commit()
@@ -137,7 +137,7 @@ class ColorDB:
         %s, %s, %s, %s, %s, %s, %s, %s)
         """
         cur.execute(query, value)
-        if cur is None:
+        if conn is None:
             self.conn.commit()
         else:
             conn.commit()
@@ -173,6 +173,18 @@ class ColorDB:
         cur.execute("""ALTER TABLE colorbase.colors CONVERT TO CHARACTER SET utf8""")
         cur.execute("""ALTER TABLE colorbase.patterns CONVERT TO CHARACTER SET utf8""")
         cur.execute("""ALTER TABLE colorbase.palettes CONVERT TO CHARACTER SET utf8""")
+
+    def update_patterns(self, value, conn=None):
+        if conn is None:
+            cur = self.conn.cursor()
+        else:
+            cur = conn.cursor()
+        query = """UPDATE patterns SET templateNumber= %s WHERE patternId = %s"""
+        cur.execute(query, value)
+        if conn is None:
+            self.conn.commit()
+        else:
+            conn.commit()
 
 
 if __name__ == '__main__':
