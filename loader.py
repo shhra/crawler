@@ -220,7 +220,7 @@ class XMLParser:
                     for _ in range(value):
                         pcolor.append('NULL')
                 try:
-                    template_number = pattern['template'][0].split('/')[-2]
+                    template_number = pattern['template'][1].split('/')[-2]
                 except KeyError:
                     template_number = -1
                 values = (pattern['id'],
@@ -295,7 +295,7 @@ def get_last_row(st, end):
         else:
             last_color = -1
 
-        sql = """SELECT patternId FROM patterns WHERE patternId BETWEEN {} and {} ORDER BY ID ASC LIMIT 1""".format(st, end)
+        sql = """SELECT patternId FROM patterns WHERE patternId BETWEEN {} and {} ORDER BY ID DESC LIMIT 1""".format(st, end)
         cur.execute(sql)
         out = cur.fetchall()
         if len(out) != 0:
@@ -326,14 +326,23 @@ if __name__ == '__main__':
     aparser.add_argument('--end', metavar='-E', type=int, default=500, help='End iterator')
     args = aparser.parse_args()
 
-    color = palette = 0
-
     d = 100000
-    parser = XMLParser(args.start, color+1, palette+1, args.start, args.start + d)
-    parser1 = XMLParser(args.start + d, color+1, palette+1, args.start + d, args.start + 2*d)
-    parser2 = XMLParser(args.start + 2*d, color+1, palette+1, args.start + 2 * d, args.end)
+    last = get_last_row(args.start, args.end)
+    color, palette, pattern = last
+    if last[2] == -1:
+        pattern = args.start
+    parser = XMLParser(args.start, color+1, palette+1, pattern, args.start + d)
+    last = get_last_row(args.start + d, args.end)
+    color, palette, pattern = last
+    if last[2] == -1:
+        pattern = args.start + d
+    parser1 = XMLParser(args.start + d, color+1, palette+1, pattern, args.start + 2*d)
+    last = get_last_row(args.start + 2 * d, args.end)
+    color, palette, pattern = last
+    if last[2] == -1:
+        pattern = args.start + 2 * d
+    parser2 = XMLParser(args.start + 2*d, color+1, palette+1, pattern, args.end)
 
-    print(args.start, args.start+d, args.start+2*d, args.end)
     pattern_thread_1 = ThreadWithReturn(name='Pattern_1_{}'.format(args.start), target=parser.write_to_pattern)
     pattern_thread_2 = ThreadWithReturn(name='Pattern_2_{}'.format(args.start), target=parser1.write_to_pattern)
     pattern_thread_3 = ThreadWithReturn(name='Pattern_3_{}'.format(args.start), target=parser2.write_to_pattern)
