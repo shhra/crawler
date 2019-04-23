@@ -336,27 +336,21 @@ if __name__ == '__main__':
     parser4 = XMLParser(args.start + 4*d, color+1, palette+1, args.start + 5 * d, args.end)
 
     print(args.start, args.start+d, args.start+2*d, args.start+3*d, args.start+4*d, args.end)
-    pattern_thread_1 = ThreadWithReturn(name='Pattern_1', target=parser.update_pattern_and_fetch_image)
-    pattern_thread_2 = ThreadWithReturn(name='Pattern_2', target=parser1.update_pattern_and_fetch_image)
-    pattern_thread_3 = ThreadWithReturn(name='Pattern_3', target=parser2.update_pattern_and_fetch_image)
-    pattern_thread_4 = ThreadWithReturn(name='Pattern_3', target=parser3.update_pattern_and_fetch_image)
-    pattern_thread_5 = ThreadWithReturn(name='Pattern_3', target=parser4.update_pattern_and_fetch_image)
+    pattern_thread_1 = ThreadWithReturn(name='Pattern_1_{}'.format(args.start), target=parser.update_pattern_and_fetch_image)
+    pattern_thread_2 = ThreadWithReturn(name='Pattern_2_{}'.format(args.start), target=parser1.update_pattern_and_fetch_image)
+    pattern_thread_3 = ThreadWithReturn(name='Pattern_3_{}'.format(args.start), target=parser2.update_pattern_and_fetch_image)
 
     print(" Starting thread at {}".format(args.start))
 
     pattern_thread_1.start()
     pattern_thread_2.start()
     pattern_thread_3.start()
-    pattern_thread_4.start()
-    pattern_thread_5.start()
 
     out  = pattern_thread_1.join()
     out2 = pattern_thread_2.join()
     out3 = pattern_thread_3.join()
-    out4 = pattern_thread_4.join()
-    out5 = pattern_thread_5.join()
 
-    if out == out2 == out3 == out4 == out5 == 0:
+    if out == out2 == out3 == 0:
         print("Successful")
         exit(0)
     else:
