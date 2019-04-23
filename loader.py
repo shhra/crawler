@@ -332,6 +332,8 @@ if __name__ == '__main__':
     if last[2] == -1:
         pattern = args.start
     parser = XMLParser(args.start, color+1, palette+1, pattern, args.start + d)
+    parser.db.create_tables()
+    parser.db.change_to_utf()
     last = get_last_row(args.start + d, args.end)
     color, palette, pattern = last
     if last[2] == -1:
