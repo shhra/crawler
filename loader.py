@@ -220,7 +220,7 @@ class XMLParser:
                     for _ in range(value):
                         pcolor.append('NULL')
                 try:
-                    template_number = pattern['template']['url'].split('/')[-2]
+                    template_number = pattern['template'][0].split('/')[-2]
                 except KeyError:
                     template_number = -1
                 values = (pattern['id'],
@@ -332,13 +332,11 @@ if __name__ == '__main__':
     parser = XMLParser(args.start, color+1, palette+1, args.start, args.start + d)
     parser1 = XMLParser(args.start + d, color+1, palette+1, args.start + d, args.start + 2*d)
     parser2 = XMLParser(args.start + 2*d, color+1, palette+1, args.start + 2 * d, args.end)
-    parser3 = XMLParser(args.start + 3*d, color+1, palette+1, args.start + 4 * d, args.end)
-    parser4 = XMLParser(args.start + 4*d, color+1, palette+1, args.start + 5 * d, args.end)
 
-    print(args.start, args.start+d, args.start+2*d, args.start+3*d, args.start+4*d, args.end)
-    pattern_thread_1 = ThreadWithReturn(name='Pattern_1_{}'.format(args.start), target=parser.update_pattern_and_fetch_image)
-    pattern_thread_2 = ThreadWithReturn(name='Pattern_2_{}'.format(args.start), target=parser1.update_pattern_and_fetch_image)
-    pattern_thread_3 = ThreadWithReturn(name='Pattern_3_{}'.format(args.start), target=parser2.update_pattern_and_fetch_image)
+    print(args.start, args.start+d, args.start+2*d, args.end)
+    pattern_thread_1 = ThreadWithReturn(name='Pattern_1_{}'.format(args.start), target=parser.write_to_pattern)
+    pattern_thread_2 = ThreadWithReturn(name='Pattern_2_{}'.format(args.start), target=parser1.write_to_pattern)
+    pattern_thread_3 = ThreadWithReturn(name='Pattern_3_{}'.format(args.start), target=parser2.write_to_pattern)
 
     print(" Starting thread at {}".format(args.start))
 

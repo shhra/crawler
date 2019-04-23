@@ -5,10 +5,10 @@ code()
         sleep 1;
     done
 }
-for start in {0..7}
+for start in {0..20}
 do
     let st=$(($start * 300000))
     let end=$(( $(($start + 1)) * 300000))
-#    code "$st" "$end" &
-    echo $st, $end
+    code "$st" "$end" &
+#    echo $st, $end
 done
