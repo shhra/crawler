@@ -48,7 +48,7 @@ class ColorDB:
         pattern_table = """
                       CREATE TABLE IF NOT EXISTS patterns ( 
                       id INT AUTO_INCREMENT PRIMARY KEY,
-                      patternId INT,
+                      UNIQUE patternId INT,
                       username VARCHAR (255),
                       numViews INT,
                       numVotes INT,
