@@ -8,8 +8,8 @@ code()
 }
 for start in {0..20}
 do
-    let st=$(($start * 300000))
-    let end=$(( $(($start + 1)) * 300000))
+    let st=$(($start * 100000))
+    let end=$(( $(($start + 1)) * 100000))
     code "$st" "$end" &
 #    echo $st, $end
 

@@ -326,69 +326,69 @@ if __name__ == '__main__':
     aparser.add_argument('--end', metavar='-E', type=int, default=500, help='End iterator')
     args = aparser.parse_args()
 
-    d = 100000
-    # Get the last row in range
-    last = get_last_row(args.start, args.start + d)
-    color, palette, pattern = last
-    if last[2] == -1:
-        pattern = args.start
-
-    parser = XMLParser(args.start, color+1, palette+1, pattern+1, args.start + d)
-    parser.db.create_tables()
-    parser.db.change_to_utf()
-
-    # Get the last row in another range
-    last = get_last_row(args.start + d, args.start + 2*d)
-    color, palette, pattern = last
-    if last[2] == -1:
-        pattern = args.start + d
-    parser1 = XMLParser(args.start + d, color+1, palette+1, pattern, args.start + 2*d)
-
-    # Get final thread
-    last = get_last_row(args.start + 2 * d, args.end)
-    color, palette, pattern = last
-    if last[2] == -1:
-        pattern = args.start + 2 * d
-    parser2 = XMLParser(args.start + 2*d, color+1, palette+1, pattern, args.end)
-
-    pattern_thread_1 = ThreadWithReturn(name='Pattern_1_{}'.format(args.start), target=parser.write_to_pattern)
-    pattern_thread_2 = ThreadWithReturn(name='Pattern_2_{}'.format(args.start), target=parser1.write_to_pattern)
-    pattern_thread_3 = ThreadWithReturn(name='Pattern_3_{}'.format(args.start), target=parser2.write_to_pattern)
-
-    print(" Starting thread at {}".format(args.start))
-
-    pattern_thread_1.start()
-    pattern_thread_2.start()
-    pattern_thread_3.start()
-
-    out  = pattern_thread_1.join()
-    out2 = pattern_thread_2.join()
-    out3 = pattern_thread_3.join()
-
-    if out == out2 == out3 == 0:
-        print("Successful")
-        exit(0)
-    else:
-        exit(-1073741819)
+    # d = 100000
+    # # Get the last row in range
+    # last = get_last_row(args.start, args.start + d)
+    # color, palette, pattern = last
+    # if last[2] == -1:
+    #     pattern = args.start
+    #
+    # parser = XMLParser(args.start, color+1, palette+1, pattern+1, args.start + d)
+    # parser.db.create_tables()
+    # parser.db.change_to_utf()
+    #
+    # # Get the last row in another range
+    # last = get_last_row(args.start + d, args.start + 2*d)
+    # color, palette, pattern = last
+    # if last[2] == -1:
+    #     pattern = args.start + d
+    # parser1 = XMLParser(args.start + d, color+1, palette+1, pattern, args.start + 2*d)
+    #
+    # # Get final thread
+    # last = get_last_row(args.start + 2 * d, args.end)
+    # color, palette, pattern = last
+    # if last[2] == -1:
+    #     pattern = args.start + 2 * d
+    # parser2 = XMLParser(args.start + 2*d, color+1, palette+1, pattern, args.end)
+    #
+    # pattern_thread_1 = ThreadWithReturn(name='Pattern_1_{}'.format(args.start), target=parser.write_to_pattern)
+    # pattern_thread_2 = ThreadWithReturn(name='Pattern_2_{}'.format(args.start), target=parser1.write_to_pattern)
+    # pattern_thread_3 = ThreadWithReturn(name='Pattern_3_{}'.format(args.start), target=parser2.write_to_pattern)
+    #
+    # print(" Starting thread at {}".format(args.start))
+    #
+    # pattern_thread_1.start()
+    # pattern_thread_2.start()
+    # pattern_thread_3.start()
+    #
+    # out  = pattern_thread_1.join()
+    # out2 = pattern_thread_2.join()
+    # out3 = pattern_thread_3.join()
+    #
+    # if out == out2 == out3 == 0:
+    #     print("Successful")
+    #     exit(0)
+    # else:
+    #     exit(-1073741819)
 
     # important loader code
     # import time
     # start = time.time()
     #
-    # aparser = argparse.ArgumentParser(description='Define ranger of parser')
-    # aparser.add_argument('--start', metavar='-S', type=int, default=0, help='Start iterator')
-    # aparser.add_argument('--end', metavar='-E', type=int, default=10, help='End iterator')
-    # args = aparser.parse_args()
-    # last = get_last_row(args.start, args.end)
-    # color, palette, pattern = last
+    aparser = argparse.ArgumentParser(description='Define ranger of parser')
+    aparser.add_argument('--start', metavar='-S', type=int, default=0, help='Start iterator')
+    aparser.add_argument('--end', metavar='-E', type=int, default=10, help='End iterator')
+    args = aparser.parse_args()
+    last = get_last_row(args.start, args.end)
+    color, palette, pattern = last
     # if last[0] == -1:
     #     color = args.start
     # if last[1] == -1:
     #     palette = args.start
-    # if last[2] == -1:
-    #     pattern = args.start
+    if last[2] == -1:
+        pattern = args.start
     #
-    # parser = XMLParser(args.start, color+1, palette+1, pattern+1, args.end)
+    parser = XMLParser(args.start, color+1, palette+1, pattern+1, args.end)
     # # parser.db.drop_tables()
     # # parser.db.create_tables()
     # # parser.db.change_to_utf()
@@ -397,22 +397,23 @@ if __name__ == '__main__':
     # out = out2 = out3 = 0
     # color_thread = ThreadWithReturn(name='Color', target=parser.write_to_color)
     # # palette_thread = ThreadWithReturn(name='Palette', target=parser.write_to_palette)
-    # # pattern_thread = ThreadWithReturn(name='Pattern', target=parser.write_to_pattern)
+    pattern_thread = ThreadWithReturn(name='Pattern', target=parser.write_to_pattern)
     #
     # color_thread.start()
     # # palette_thread.start()
-    # # pattern_thread.start()
+    pattern_thread.start()
     #
     # out = color_thread.join()
-    # # out2 = palette_thread.join()
-    # # out3 = palette_thread.join()
+    out2 = pattern_thread.join()
+    # out3 = palette_thread.join()
     #
     # # parser.logger.info("{} {} {}".format(out, out2, out3))
     # # parser.logger.info("{} {} {}".format(out))
     # if out == out2 == out3 == 0:
-    #     exit(0)
-    # else:
-    #     exit(-1073741819)
+    if out2 == 0:
+        exit(0)
+    else:
+        exit(-1073741819)
 
     # if out != 0:
     #     # print("From color: ", out)
