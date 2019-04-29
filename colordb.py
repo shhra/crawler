@@ -48,7 +48,7 @@ class ColorDB:
         pattern_table = """
                       CREATE TABLE IF NOT EXISTS patterns ( 
                       id INT AUTO_INCREMENT PRIMARY KEY,
-                      UNIQUE KEY patternId INT,
+                      patternId INT,
                       username VARCHAR (255),
                       numViews INT,
                       numVotes INT,
@@ -62,7 +62,8 @@ class ColorDB:
                       color5 VARCHAR (255),
                       numColors INT,
                       imageUrl VARCHAR (255),
-                      templateNumber INT (255)
+                      templateNumber INT (255),
+                      UNIQUE KEY pID (patternId)
                       )
                     """
         cur.execute(pattern_table)
