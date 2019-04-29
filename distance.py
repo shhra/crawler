@@ -135,10 +135,10 @@ class Distance(Analyze):
 
         df = pd.DataFrame(np_dist)
         # df = df.replace(0, np.nan)
-        df['repeats'] = df.apply(lambda x: cols - x.isnull().sum(), axis='columns')
-
-        # df.sort_values("repeats", inplace=True, ascending=False)
-        df = df.drop(columns='repeats')
+        # df['repeats'] = df.apply(lambda x: cols - x.isnull().sum(), axis='columns')
+        #
+        # # df.sort_values("repeats", inplace=True, ascending=False)
+        # df = df.drop(columns='repeats')
 
         index = np.argwhere(df.notnull().values).tolist()
         index = np.asarray(index)
@@ -154,7 +154,6 @@ if __name__ == '__main__':
     df_palette = pd.read_csv('top_palettes.csv')
     df_palette = df_palette.drop(columns='Unnamed: 0')
     top_palette = np.asarray(df_palette)
-    zeros = np.zeros_like(top_colors)
 
     cols = top_palette.shape[0]
     rows = top_colors.shape[0]

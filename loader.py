@@ -295,7 +295,7 @@ def get_last_row(st, end):
         else:
             last_color = -1
 
-        sql = """SELECT patternId FROM patterns WHERE patternId BETWEEN {} and {} ORDER BY ID DESC LIMIT 1""".format(st, end)
+        sql = """SELECT patternId FROM patterns WHERE patternId BETWEEN {} and {} ORDER BY ID DESC LIMIT 1""".format(st, end+1)
         cur.execute(sql)
         out = cur.fetchall()
         if len(out) != 0:
@@ -303,7 +303,7 @@ def get_last_row(st, end):
         else:
             last_pattern = -1
 
-        sql = """SELECT paletteId FROM palettes WHERE paletteID BETWEEN {} and {} ORDER BY ID DESC LIMIT 1""".format(st,end+1)
+        sql = """SELECT paletteId FROM palettes WHERE paletteID BETWEEN {} and {} ORDER BY ID DESC LIMIT 1""".format(st, end+1)
         cur.execute(sql)
         out = cur.fetchall()
         if len(out) != 0:
@@ -331,19 +331,19 @@ if __name__ == '__main__':
     color, palette, pattern = last
     if last[2] == -1:
         pattern = args.start
-    parser = XMLParser(args.start, color+1, palette+1, pattern, args.start + d)
+    parser = XMLParser(args.start, color+1, palette+1, pattern+1, args.start + d)
     parser.db.create_tables()
     parser.db.change_to_utf()
     last = get_last_row(args.start + d, args.end)
     color, palette, pattern = last
     if last[2] == -1:
         pattern = args.start + d
-    parser1 = XMLParser(args.start + d, color+1, palette+1, pattern, args.start + 2*d)
+    parser1 = XMLParser(args.start + d, color+1, palette+1, pattern+1, args.start + 2*d)
     last = get_last_row(args.start + 2 * d, args.end)
     color, palette, pattern = last
     if last[2] == -1:
         pattern = args.start + 2 * d
-    parser2 = XMLParser(args.start + 2*d, color+1, palette+1, pattern, args.end)
+    parser2 = XMLParser(args.start + 2*d, color+1, palette+1, pattern+1, args.end)
 
     pattern_thread_1 = ThreadWithReturn(name='Pattern_1_{}'.format(args.start), target=parser.write_to_pattern)
     pattern_thread_2 = ThreadWithReturn(name='Pattern_2_{}'.format(args.start), target=parser1.write_to_pattern)
